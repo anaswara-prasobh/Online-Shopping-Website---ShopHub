@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - ShopHub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">🛒 ShopHub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/products">Shop</a>
+                    </li>
+                    <li class="nav-item" id="adminNav" style="display:none;">
+                        <a class="nav-link" href="/product-form">Add Product</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/cart">
+                            <span>🛍️ Cart</span>
+                            <span id="cartCount" class="badge bg-warning text-dark ms-2">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light btn-sm ms-2" id="logoutBtn">Logout</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <h1 class="fw-bold mb-4">Shopping Cart</h1>
+
+        <div class="row">
+            <!-- Cart Items -->
+            <div class="col-lg-8">
+                <div class="card material-card shadow-sm" id="cartItemsCard">
+                    <div class="card-body" id="cartItemsContainer">
+                        <!-- Cart items will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Empty Cart Message -->
+                <div class="alert alert-info text-center" id="emptyCartMessage" style="display:none;">
+                    <p>Your cart is empty. <a href="/products">Continue shopping</a></p>
+                </div>
+            </div>
+
+            <!-- Cart Summary -->
+            <div class="col-lg-4">
+                <div class="card material-card shadow-sm sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary text-white fw-bold">Order Summary</div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">Rs.0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping:</span>
+                            <span id="shipping">Rs.0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Tax:</span>
+                            <span id="tax">Rs.0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <strong>Total:</strong>
+                            <strong class="h5 text-primary" id="total">Rs.0.00</strong>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success btn-lg material-btn fw-bold" id="checkoutBtn">
+                                Proceed to Checkout
+                            </button>
+                            <a href="/products" class="btn btn-outline-primary">Continue Shopping</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5 mt-5">
+        <div class="container text-center">
+            <p class="text-muted">© 2025 ShopHub. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Material Snackbar -->
+    <div id="snackbar" class="snackbar"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        const TAX_RATE = 0.08;
+        const SHIPPING_THRESHOLD = 50;
+        const SHIPPING_COST = 10;
+
+        function checkAuth() {
+            const loggedInUser = localStorage.getItem('loggedInUser');
+            if (!loggedInUser) {
+                window.location.href = '/';
+                return;
+            }
+            const user = JSON.parse(loggedInUser);
+            if (user.isAdmin || user.email === 'admin@gmail.com') {
+                document.getElementById('adminNav').style.display = 'block';
+            }
+        }
+
+        function loadCart() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            
+            if (cart.length === 0) {
+                document.getElementById('cartItemsCard').style.display = 'none';
+                document.getElementById('emptyCartMessage').style.display = 'block';
+                document.getElementById('checkoutBtn').disabled = true;
+                updateSummary(0);
+                return;
+            }
+
+            document.getElementById('cartItemsCard').style.display = 'block';
+            document.getElementById('emptyCartMessage').style.display = 'none';
+            renderCartItems(cart);
+            updateSummary(getCartTotal(cart));
+            updateCartCount();
+        }
+
+        function renderCartItems(cart) {
+            const container = document.getElementById('cartItemsContainer');
+            container.innerHTML = cart.map((item, index) => `
+                <div class="card border-0 mb-3 pb-3" style="border-bottom: 1px solid #eee;">
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <img src="https://via.placeholder.com/100?text=${encodeURIComponent(item.name)}" class="img-fluid rounded" alt="${item.name}">
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="fw-bold">${item.name}</h6>
+                            <p class="text-muted">Price: <span class="fw-bold">Rs.${item.price.toFixed(2)}</span></p>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="input-group input-group-sm">
+                                <button class="btn btn-outline-secondary" onclick="updateQuantity(${index}, ${item.quantity - 1})">-</button>
+                                <input type="text" class="form-control text-center" value="${item.quantity}" disabled>
+                                <button class="btn btn-outline-secondary" onclick="updateQuantity(${index}, ${item.quantity + 1})">+</button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <p class="fw-bold">$${(item.price * item.quantity).toFixed(2)}</p>
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
+                                <span>🗑️</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateQuantity(index, newQuantity) {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            if (newQuantity <= 0) {
+                cart.splice(index, 1);
+            } else {
+                cart[index].quantity = newQuantity;
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            loadCart();
+        }
+
+        function removeFromCart(index) {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const itemName = cart[index].name;
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            loadCart();
+            showSnackbar(`${itemName} removed from cart`);
+        }
+
+        function getCartTotal(cart) {
+            return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        }
+
+        function updateSummary(subtotal) {
+            const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+            const tax = subtotal * TAX_RATE;
+            const total = subtotal + shipping + tax;
+
+            document.getElementById('subtotal').textContent = `Rs.${subtotal.toFixed(2)}`;
+            document.getElementById('shipping').textContent = shipping === 0 ? 'FREE' : `Rs.${shipping.toFixed(2)}`;
+            document.getElementById('tax').textContent = `Rs.${tax.toFixed(2)}`;
+            document.getElementById('total').textContent = `Rs.${total.toFixed(2)}`;
+        }
+
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cartCount').textContent = count;
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('loggedInUser');
+            window.location.href = '/login';
+        });
+
+        document.getElementById('checkoutBtn').addEventListener('click', function() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            if (cart.length === 0) {
+                showSnackbar('Your cart is empty');
+                return;
+            }
+            showSnackbar('Thank you for your purchase!');
+            localStorage.setItem('cart', JSON.stringify([]));
+            setTimeout(() => {
+                loadCart();
+                document.getElementById('checkoutBtn').disabled = true;
+            }, 2000);
+        });
+
+        // Initialize
+        checkAuth();
+        loadCart();
+    </script>
+</body>
+</html>

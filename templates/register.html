@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration - ShopHub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card material-card shadow-lg">
+                    <div class="card-body p-5">
+                        <h2 class="card-title text-center mb-4 fw-bold">Create Account</h2>
+                        
+                        <form id="registerForm">
+                            <!-- Name Input -->
+                            <div class="mb-3">
+                                <label for="regName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control material-input" id="regName" placeholder="Enter your full name" required>
+                                <small class="text-danger" id="nameError"></small>
+                            </div>
+
+                            <!-- Email Input -->
+                            <div class="mb-3">
+                                <label for="regEmail" class="form-label">Email Address</label>
+                                <input type="email" class="form-control material-input" id="regEmail" placeholder="example@gmail.com" required>
+                                <small class="text-danger" id="emailError"></small>
+                            </div>
+
+                            <!-- Password Input -->
+                            <div class="mb-3">
+                                <label for="regPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control material-input" id="regPassword" placeholder="Minimum 6 characters" required>
+                                <small class="text-danger" id="passwordError"></small>
+                            </div>
+
+                            <!-- Confirm Password Input -->
+                            <div class="mb-3">
+                                <label for="regConfirmPassword" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control material-input" id="regConfirmPassword" placeholder="Re-enter password" required>
+                                <small class="text-danger" id="confirmError"></small>
+                            </div>
+
+                            <!-- Register Button -->
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg material-btn fw-bold">Register</button>
+                            </div>
+
+                            <!-- Login Link -->
+                            <p class="text-center">
+                                Already have an account? 
+                                <a href="/" class="text-primary fw-bold">Login here</a>
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Material Snackbar -->
+    <div id="snackbar" class="snackbar"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = {
+                name: document.getElementById('regName').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                confirmPassword: document.getElementById('regConfirmPassword').value
+            };
+
+            if (validateRegistration(formData)) {
+                registerUser(formData);
+            }
+        });
+
+        function validateRegistration(data) {
+            let isValid = true;
+
+            // Reset errors
+            document.getElementById('nameError').textContent = '';
+            document.getElementById('emailError').textContent = '';
+            document.getElementById('passwordError').textContent = '';
+            document.getElementById('confirmError').textContent = '';
+
+            // Name validation
+            if (data.name.trim().length < 3) {
+                document.getElementById('nameError').textContent = 'Name must be at least 3 characters';
+                isValid = false;
+            }
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(data.email)) {
+                document.getElementById('emailError').textContent = 'Please enter a valid email address';
+                isValid = false;
+            }
+
+            // Check if email already exists
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            if (users.some(u => u.email === data.email)) {
+                document.getElementById('emailError').textContent = 'Email already registered';
+                isValid = false;
+            }
+
+            // Password validation
+            if (data.password.length < 6) {
+                document.getElementById('passwordError').textContent = 'Password must be at least 6 characters';
+                isValid = false;
+            }
+
+            // Confirm password validation
+            if (data.password !== data.confirmPassword) {
+                document.getElementById('confirmError').textContent = 'Passwords do not match';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function registerUser(data) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const newUser = {
+                id: Date.now(),
+                name: data.name,
+                email: data.email,
+                password: data.password
+            };
+
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+
+            showSnackbar('Registration successful! Redirecting to login...');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

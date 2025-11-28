@@ -1,0 +1,75 @@
+# 🚀 QUICK START - Push to GitHub in 60 Seconds
+
+## Step 1: Install Git (if needed)
+Download: https://git-scm.com/download/win
+
+## Step 2: Open PowerShell
+Navigate to your project:
+```powershell
+cd "c:\Users\prash\Desktop\Notes\PythonFSD"
+```
+
+## Step 3: Run Automation Script
+```powershell
+.\push-to-github.ps1
+```
+
+OR run these commands manually:
+
+```powershell
+git init
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+git remote add origin https://github.com/anaswara-prasobh/Online-Shopping-Website---ShopHub.git
+git add .
+git commit -m "Initial commit: ShopHub Online Shopping Website"
+git branch -M main
+git push -u origin main
+```
+
+## Step 4: Enter Credentials
+When prompted for password: **Use Personal Access Token**
+
+Get token from: https://github.com/settings/tokens
+- Click "Generate new token"
+- Select "repo" scope
+- Copy and paste when asked for password
+
+## Step 5: Done! ✅
+Verify at: https://github.com/anaswara-prasobh/Online-Shopping-Website---ShopHub
+
+---
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| "Git not recognized" | Install Git from https://git-scm.com/download/win |
+| "Authentication failed" | Use Personal Access Token instead of password |
+| "Permission denied" | Check GitHub credentials or use SSH keys |
+| "fatal: not a git repository" | Run `git init` first |
+
+---
+
+## What Gets Pushed
+
+✅ All Python files (app.py)
+✅ All HTML templates (6 pages)
+✅ All CSS styling
+✅ All JavaScript functionality
+✅ Documentation files
+✅ .gitignore
+
+---
+
+## After Push
+
+1. Check GitHub: https://github.com/anaswara-prasobh/Online-Shopping-Website---ShopHub
+2. Verify all files are there
+3. Share the link!
+
+---
+
+**Total Time: ~5 minutes including Git installation**
+
+Questions? See `GITHUB_INSTRUCTIONS.md` for detailed steps.

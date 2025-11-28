@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Product</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-lg">
+                    <div class="card-body p-4">
+                        <h2 class="text-center fw-bold mb-3">Edit Product</h2>
+
+                        <form id="editProductForm">
+
+                            <!-- Product Name -->
+                            <div class="mb-3">
+                                <label class="form-label">Product Name</label>
+                                <input type="text" id="editName" class="form-control" required>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea id="editDescription" class="form-control" rows="3" required></textarea>
+                            </div>
+
+                            <!-- Price -->
+                            <div class="mb-3">
+                                <label class="form-label">Price (Rs.)</label>
+                                <input type="number" id="editPrice" class="form-control" required min="1">
+                            </div>
+
+                            <!-- Category -->
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <select id="editCategory" class="form-select" required>
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Fashion">Fashion</option>
+                                    <option value="Books">Books</option>
+                                    <option value="Gaming">Gaming</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <!-- Stock -->
+                            <div class="mb-3">
+                                <label class="form-label">Stock Quantity</label>
+                                <input type="number" id="editStock" class="form-control" required min="0">
+                            </div>
+
+                            <div class="d-grid">
+                                <button class="btn btn-primary fw-bold">Update Product</button>
+                            </div>
+
+                            <p class="text-center mt-3">
+                                <a href="/products" class="fw-bold">Back to Products</a>
+                            </p>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let productId = null;
+
+    // Extract product ID from URL
+    function getProductId() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get("id");
+    }
+
+    // Load product details into fields
+    function loadProductDetails() {
+        productId = getProductId();
+
+        const products = JSON.parse(localStorage.getItem("products")) || [];
+        const product = products.find(p => p.id == productId);
+
+        if (!product) {
+            alert("Product not found!");
+            window.location.href = "/products";
+            return;
+        }
+
+        // Fill input fields
+        document.getElementById("editName").value = product.name;
+        document.getElementById("editDescription").value = product.description;
+        document.getElementById("editPrice").value = product.price;
+        document.getElementById("editCategory").value = product.category;
+        document.getElementById("editStock").value = product.stock;
+    }
+
+    // Save updated details
+    document.getElementById("editProductForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const products = JSON.parse(localStorage.getItem("products")) || [];
+        const index = products.findIndex(p => p.id == productId);
+
+        products[index] = {
+            ...products[index],
+            name: document.getElementById("editName").value,
+            description: document.getElementById("editDescription").value,
+            price: parseFloat(document.getElementById("editPrice").value),
+            category: document.getElementById("editCategory").value,
+            stock: parseInt(document.getElementById("editStock").value)
+        };
+
+        localStorage.setItem("products", JSON.stringify(products));
+
+        alert("Product updated successfully!");
+        window.location.href = "/products";
+    });
+
+    loadProductDetails();
+</script>
+
+</body>
+</html>
